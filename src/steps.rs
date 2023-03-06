@@ -7,7 +7,8 @@ pub fn compute_steps_text(steps: Vec<SolutionStep>) -> String {
   }
 
   let mut text = String::default();
-  text += "Steps to make progress ^\\(I ^ignored ^any ^existing ^pencilmarks)  \n";
+  text += "Steps to make progress ";
+  text += "^\\(I ^ignored ^any ^existing ^pencilmarks, ^the ^helpful ^steps ^are ^likely ^at ^the ^end ^of ^the ^list)  \n";
   text += "* Make sure to write in full [pencilmarks](https://www.sudopedia.org/wiki/Pencilmark)  \n";
   for (index, step) in relevant_steps.iter().enumerate() {
     text += "* ";
