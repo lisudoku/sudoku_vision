@@ -90,12 +90,12 @@ fn crop_image(image: &Mat) -> Result<Mat, Box<dyn std::error::Error>> {
   let image_width = image_dimensions.width;
   let image_height = image_dimensions.height;
 
-  if image_height <= 2 * image_width {
-    return Ok(image.clone())
-  }
-
   let top_padding = 100;
   let final_height = image_width * 3 / 2 - top_padding;
+
+  if image_height <= final_height + top_padding {
+    return Ok(image.clone())
+  }
 
   // Define the region of interest (ROI) in the image
   let roi = core::Rect::new(0, top_padding, image_width, final_height);
@@ -405,6 +405,25 @@ fn check_parse_image8() {
     vec![ 7, 0, 1, 0, 0, 9, 0, 0, 0 ],
     vec![ 9, 0, 3, 0, 8, 0, 0, 0, 7 ],
     vec![ 2, 0, 5, 0, 7, 0, 0, 0, 0 ],
+  ];
+  let expected_given_digits = SudokuGrid::new(expected_grid).to_fixed_numbers();
+  compare_fixed_numbers(given_digits, expected_given_digits);
+}
+
+#[test]
+fn check_parse_image9() {
+  let image = imgcodecs::imread("src/test_images/image9.png", imgcodecs::IMREAD_COLOR).unwrap();
+  let given_digits = parse_image_from_object_full(&image).unwrap();
+  let expected_grid = vec![
+    vec![ 4, 7, 3, 6, 5, 2, 0, 9, 0 ],
+    vec![ 0, 5, 0, 9, 4, 3, 7, 2, 6 ],
+    vec![ 9, 2, 6, 1, 7, 8, 3, 4, 5 ],
+    vec![ 5, 0, 0, 7, 0, 4, 9, 1, 3 ],
+    vec![ 3, 0, 0, 0, 1, 9, 0, 0, 7 ],
+    vec![ 0, 9, 0, 3, 0, 0, 0, 0, 4 ],
+    vec![ 0, 0, 5, 2, 3, 0, 0, 7, 9 ],
+    vec![ 0, 3, 0, 0, 0, 0, 0, 0, 2 ],
+    vec![ 2, 0, 0, 4, 0, 0, 0, 3, 0 ],
   ];
   let expected_given_digits = SudokuGrid::new(expected_grid).to_fixed_numbers();
   compare_fixed_numbers(given_digits, expected_given_digits);
