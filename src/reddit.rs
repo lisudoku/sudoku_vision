@@ -1,3 +1,5 @@
+use std::thread;
+use core::time::Duration;
 use std::{env, collections::HashSet};
 use roux::{Reddit, Subreddit, User, response::BasicThing, submission::SubmissionData, util::FeedOption};
 use warp::hyper::body::Bytes;
@@ -18,7 +20,9 @@ pub async fn fetch_relevant_posts() -> Vec<BasicThing<SubmissionData>> {
   let bot_comment_history_limit = bot_comment_history_limit_str.parse::<u32>().unwrap();
   let params = FeedOption::new().limit(bot_comment_history_limit);
   let comments = user.comments(Some(params)).await.unwrap().data.children;
+  thread::sleep(Duration::from_secs(2));
   println!("Received {} comments", comments.len());
+
   let replied_post_ids: HashSet<String> = comments
     .into_iter()
     .map(|comment| comment.data.link_id.unwrap())
@@ -33,6 +37,7 @@ pub async fn fetch_relevant_posts() -> Vec<BasicThing<SubmissionData>> {
   let post_count_str = env::var("POST_COUNT").unwrap_or(POST_COUNT_DEFAULT.to_string());
   let post_count = post_count_str.parse::<u32>().unwrap();
   let posts = subreddit.latest(post_count, None).await.unwrap().data.children;
+  thread::sleep(Duration::from_secs(2));
   println!("Received {} posts", posts.len());
 
   let relevant_posts: Vec<BasicThing<SubmissionData>> = posts
@@ -77,6 +82,7 @@ pub async fn post_reply(post: &SubmissionData, comment_text: String) -> Result<(
     .login()
     .await
     .unwrap();
+  thread::sleep(Duration::from_secs(2));
 
   println!("Posting comment");
 
@@ -85,6 +91,10 @@ pub async fn post_reply(post: &SubmissionData, comment_text: String) -> Result<(
   if response.status() != 200 {
     return Err(Box::from("Comment wasn't posted for some reason"))
   }
+
+  dbg!(&response);
+
+  thread::sleep(Duration::from_secs(2));
 
   println!("Posted comment!");
 
