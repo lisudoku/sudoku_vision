@@ -30,6 +30,7 @@ fn compute_comment_text(given_digits: Vec<FixedNumber>) -> Result<String, Box<dy
   }
 
   let mut text = steps::compute_steps_text(solution.steps);
+  text += &format!("Puzzle import string: `{}`  \n\n", solver.constraints.to_import_string());
   text += &format!("^Full ^solve ^[here]({}).  \n", full_solve_url);
   text += &format!("^I ^am ^a ^bot. ^Reply ^to ^this ^comment ^if ^there ^are ^any ^issues.\n");
 
