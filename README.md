@@ -12,6 +12,10 @@ ENV variables
 * `BOT_COMMENT_HISTORY_LIMIT` = number of bot comments to check in order to avoid duplicate comments
 * `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_PASSWORD` = reddit auth
 
+## Running on a local image
+
+`IMAGE_PATH=src/test_images/image9.png cargo run`
+
 ## Contribute
 
 Join the [discord server](https://discord.gg/SGV8TQVSeT).
