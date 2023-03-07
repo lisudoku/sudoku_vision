@@ -1,4 +1,5 @@
 use std::env;
+use byte_unit::Byte;
 use warp::Filter;
 use roux::{submission::SubmissionData};
 use lisudoku_solver::{solver::Solver, types::{SudokuConstraints, FixedNumber, SolutionType}};
@@ -41,6 +42,11 @@ async fn process_post(post: &SubmissionData) -> Result<(), Box<dyn std::error::E
   println!("=============================\nProcessing post {}", post.title);
 
   let image_data = get_post_image_data(post).await?;
+  println!("Downloaded image ({})", Byte::from_bytes(image_data.len() as u128).get_appropriate_unit(false));
+
+  if image_data.len() > 1_000_000 {
+    return Err(Box::from("Image too large, skipping"))
+  }
 
   println!("Parsing image");
   let given_digits = parse_image_from_bytes(&image_data)?;
