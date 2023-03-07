@@ -41,13 +41,13 @@ fn step_details(step: &SolutionStep) -> String {
 
   match step.rule {
     Rule::HiddenSingle => {
-      format!(" in {} on cell {} ({})", step.areas[0].to_string(), step.cells[0].to_string(), step.values[0])
+      format!("{} in {} on cell {}", step.values[0], step.areas[0].to_string(), step.cells[0].to_string())
     },
     Rule::NakedSingle => {
-      format!(" on cell {} ({})", step.cells[0].to_string(), step.values[0])
+      format!("{} on cell {}", step.values[0], step.cells[0].to_string())
     },
     Rule::HiddenPairs | Rule::HiddenTriples => {
-      format!(" in {} on cells {} to only keep {}", step.areas[0].to_string(), cells, values)
+      format!("of {} in {}", values, step.areas[0].to_string())
     },
     Rule::XWing => {
       format!(
@@ -59,8 +59,8 @@ fn step_details(step: &SolutionStep) -> String {
     Rule::XYWing => {
       let z_value = step.values[2];
       format!(
-        " on cells {} to remove {} from {}",
-        cells, z_value, affected_cells
+        "of {} with pivot at {} and pincers at {} and {} which removes {} from {}",
+        values, cell_displays[0], cell_displays[1], cell_displays[2], z_value, affected_cells
       )
     },
     Rule::CommonPeerElimination => {
@@ -85,14 +85,10 @@ fn step_details(step: &SolutionStep) -> String {
         format!(" in {}", step.areas[0].to_string())
       };
 
-      let cell_noun = if cells.len() == 1 { "cell" } else { "cells" };
-      let cells_message: String = if cells.is_empty() {
-        String::default()
-      } else {
-        format!(" on {} {}", cell_noun, cells)
-      };
-
-      format!("{}{} to remove {} from {}", area_message, cells_message, values, affected_cells)
+      format!(
+        "of {}{} to remove {} from {}",
+        values, area_message, values, affected_cells,
+      )
     },
     Rule::Candidates | Rule::Thermo | Rule::ThermoCandidates | Rule::KillerCandidates |
       Rule::Killer45 | Rule::Kropki | Rule::KropkiChainCandidates | Rule::TopBottomCandidates | 
