@@ -112,7 +112,7 @@ fn rule_display(rule: Rule) -> String {
     Rule::NakedTriples => "Naked Triple",
     Rule::HiddenTriples => "Hidden Triple",
     Rule::XWing => "X-Wing",
-    Rule::XYWing => "Y-Wing",
+    Rule::XYWing => "XY-Wing",
     Rule::Swordfish => "Swordfish",
     Rule::TurbotFish => "Turbot Fish",
     Rule::Candidates | Rule::Thermo | Rule::ThermoCandidates | Rule::KillerCandidates | Rule::Killer45 | Rule::Kropki |
