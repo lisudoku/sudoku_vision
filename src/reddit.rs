@@ -50,7 +50,11 @@ pub async fn fetch_relevant_posts() -> Vec<BasicThing<SubmissionData>> {
       let url = post.data.url.as_ref().unwrap();
       let post_flair = env::var("POST_FLAIR").unwrap_or(POST_FLAIR_DEFAULT.to_string());
 
-      (url.starts_with("https://i.redd.it/") || url.starts_with("https://i.imgur.com/")) &&
+      (
+        url.starts_with("https://i.redd.it/") ||
+        url.starts_with("https://i.imgur.com/") ||
+        url.starts_with("https://imgur.com/")
+      ) &&
       post.data.link_flair_text == Some(post_flair) &&
       !replied_post_ids.contains(&post.data.name)
     }).collect();
