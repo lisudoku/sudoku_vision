@@ -51,7 +51,7 @@ fn step_details(step: &SolutionStep) -> String {
     },
     Rule::XWing => {
       format!(
-        " on cells {} ({} and {}) to remove {} from {} ({} and {})",
+        " on cells {} ({} and {}) removes {} from {} ({} and {})",
         cells, area_displays[0], area_displays[1], values, affected_cells,
         area_displays[2], area_displays[3]
       )
@@ -78,16 +78,16 @@ fn step_details(step: &SolutionStep) -> String {
         values, values, affected_cells
       )
     },
-    Rule::LockedCandidatesPairs | Rule::LockedCandidatesTriples | Rule::NakedPairs | Rule::NakedTriples => {
-      let area_message: String = if step.areas.is_empty() {
-        String::default()
-      } else {
-        format!(" in {}", step.areas[0].to_string())
-      };
-
+    Rule::NakedPairs | Rule::NakedTriples => {
       format!(
-        "of {}{} to remove {} from {}",
-        values, area_message, values, affected_cells,
+        "of {} in {} removes {} from {}",
+        values, step.areas[0].to_string(), values, affected_cells,
+      )
+    },
+    Rule::LockedCandidatesPairs | Rule::LockedCandidatesTriples => {
+      format!(
+        "({}) {} in {} removes {} from {}",
+        values, step.areas[0].to_string(), step.areas[1].to_string(), values, affected_cells,
       )
     },
     Rule::Candidates | Rule::Thermo | Rule::ThermoCandidates | Rule::KillerCandidates |
@@ -100,11 +100,11 @@ fn rule_display(rule: Rule) -> String {
   let s = match rule {
     Rule::NakedSingle => "Naked Single",
     Rule::HiddenSingle => "Hidden Single",
-    Rule::LockedCandidatesPairs => "Locked Candidate Pair",
+    Rule::LockedCandidatesPairs => "Box-Line Reduction",
     Rule::NakedPairs => "Naked Pair",
     Rule::HiddenPairs => "Hidden Pair",
     Rule::CommonPeerElimination => "Common Peer Elimination",
-    Rule::LockedCandidatesTriples => "Locked Candidate Triple",
+    Rule::LockedCandidatesTriples => "Box-Line Reduction",
     Rule::NakedTriples => "Naked Triple",
     Rule::HiddenTriples => "Hidden Triple",
     Rule::XWing => "X-Wing",
