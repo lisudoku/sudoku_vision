@@ -929,9 +929,9 @@ checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
 
 [[package]]
 name = "lisudoku-solver"
-version = "0.1.18"
+version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68760a3c11b2c31bf4ac5ee94072c18631510173e3cc10b6cfcb05cf0065981b"
+checksum = "bc70b001e832c827e6f8673b6dfadfe648b6c47b10e3ebecd4c85459ea90f95b"
 dependencies = [
  "combinations",
  "console_error_panic_hook",

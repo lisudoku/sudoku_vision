@@ -90,6 +90,12 @@ fn step_details(step: &SolutionStep) -> String {
         values, step.areas[0].to_string(), step.areas[1].to_string(), values, affected_cells,
       )
     },
+    Rule::EmptyRectangles => {
+      format!(
+        "in {} that sees strong link {}-{} to remove {} from {}",
+        step.areas[0].to_string(), cell_displays[0], cell_displays[1], values, affected_cells
+      )
+    },
     Rule::Candidates | Rule::Thermo | Rule::ThermoCandidates | Rule::KillerCandidates |
       Rule::Killer45 | Rule::Kropki | Rule::KropkiChainCandidates | Rule::TopBottomCandidates | 
       Rule::CommonPeerEliminationKropki | Rule::Swordfish => unimplemented!(),
@@ -111,6 +117,7 @@ fn rule_display(rule: Rule) -> String {
     Rule::XYWing => "XY-Wing",
     Rule::Swordfish => "Swordfish",
     Rule::TurbotFish => "Turbot Fish",
+    Rule::EmptyRectangles => "Empty Rectangle",
     Rule::Candidates | Rule::Thermo | Rule::ThermoCandidates | Rule::KillerCandidates | Rule::Killer45 | Rule::Kropki |
       Rule::KropkiChainCandidates | Rule::TopBottomCandidates | 
       Rule::CommonPeerEliminationKropki => unimplemented!(),
@@ -133,6 +140,7 @@ fn rule_url(rule: Rule) -> String {
     Rule::XYWing => "https://hodoku.sourceforge.net/en/tech_wings.php#xy",
     Rule::Swordfish => "https://hodoku.sourceforge.net/en/tech_fishb.php#bf3",
     Rule::TurbotFish => "https://hodoku.sourceforge.net/en/tech_sdp.php#tf",
+    Rule::EmptyRectangles => "https://hodoku.sourceforge.net/en/tech_sdp.php#er",
     Rule::Candidates | Rule::Thermo | Rule::ThermoCandidates | Rule::KillerCandidates | Rule::Killer45 | Rule::Kropki |
       Rule::KropkiChainCandidates | Rule::TopBottomCandidates | 
       Rule::CommonPeerEliminationKropki => unimplemented!(),

@@ -11,7 +11,7 @@ warp = "0.3.1"
 roux = "2.2.5"
 opencv = "0.77.0"
 reqwest = "0.11.14"
-lisudoku-solver = "0.1.18"
+lisudoku-solver = "0.1.19"
 # lisudoku-solver = { path = "../lisudoku_solver" }
 medians = "2.1.7"
 tesseract-sys = "0.5.15"
