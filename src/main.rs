@@ -5,11 +5,13 @@ use roux::{submission::SubmissionData};
 use lisudoku_solver::{solver::Solver, types::{SudokuConstraints, FixedNumber, SolutionType}};
 
 mod sudoku_image_parser;
-mod reddit;
 mod steps;
+mod reddit;
+mod discord;
 
 use crate::sudoku_image_parser::{parse_image_from_bytes, parse_image_at_path};
 use crate::reddit::{post_reply, fetch_relevant_posts, get_post_image_data};
+use crate::discord::notify_about_comment;
 
 const LISUDOKU_BASE_URL: &str = "https://lisudoku.xyz";
 
@@ -56,6 +58,8 @@ async fn process_post(post: &SubmissionData) -> Result<(), Box<dyn std::error::E
   let comment_text = compute_comment_text(given_digits)?;
 
   post_reply(post, comment_text).await?;
+
+  notify_about_comment(&post)?;
 
   Ok(())
 }
