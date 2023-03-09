@@ -41,17 +41,17 @@ fn step_details(step: &SolutionStep) -> String {
 
   match step.rule {
     Rule::HiddenSingle => {
-      format!("{} in {} on cell {}", step.values[0], step.areas[0].to_string(), step.cells[0].to_string())
+      format!(">!{}!< in >!{}!< on cell >!{}!<", step.values[0], step.areas[0].to_string(), step.cells[0].to_string())
     },
     Rule::NakedSingle => {
-      format!("{} on cell {}", step.values[0], step.cells[0].to_string())
+      format!(">!{}!< on cell >!{}!<", step.values[0], step.cells[0].to_string())
     },
     Rule::HiddenPairs | Rule::HiddenTriples => {
-      format!("of {} in {}", values, step.areas[0].to_string())
+      format!("of >!{}!< in >!{}!<", values, step.areas[0].to_string())
     },
     Rule::XWing => {
       format!(
-        " on cells {} ({} and {}) removes {} from {} ({} and {})",
+        " on cells >!{} ({} and {})!< removes >!{} from {} ({} and {})!<",
         cells, area_displays[0], area_displays[1], values, affected_cells,
         area_displays[2], area_displays[3]
       )
@@ -59,20 +59,20 @@ fn step_details(step: &SolutionStep) -> String {
     Rule::XYWing => {
       let z_value = step.values[2];
       format!(
-        "of {} with pivot at {} and pincers at {} and {} which removes {} from {}",
+        "of >!{}!< with pivot at >!{}!< and pincers at >!{} and {}!< which removes >!{}!< from >!{}!<",
         values, cell_displays[0], cell_displays[1], cell_displays[2], z_value, affected_cells
       )
     },
     Rule::CommonPeerElimination => {
       format!(
-        " to remove value {} from {} because it would eliminate it as candidate from {} (cells {})",
+        " to remove value >!{}!< from >!{}<! because it would eliminate it as candidate from >!{} (cells {})!<",
         values, affected_cells, step.areas[0].to_string(), cells
       )
     },
     Rule::TurbotFish => {
       format!(
-        " on strong links {}-{} and {}-{}. Because {} and {} see each other, at least one 
-        of {} and {} will be {}, so remove {} from cells {}",
+        " on strong links >!{}-{}!< and >!{}-{}!<. Because >!{} and {}!< see each other, at least one \
+        of >!{} and {}!< will be >!{}!<, so remove >!{} from cells {}!<",
         cell_displays[0], cell_displays[1], cell_displays[2], cell_displays[3],
         cell_displays[0], cell_displays[2], cell_displays[1], cell_displays[3],
         values, values, affected_cells
@@ -80,19 +80,19 @@ fn step_details(step: &SolutionStep) -> String {
     },
     Rule::NakedPairs | Rule::NakedTriples => {
       format!(
-        "of {} in {} removes {} from {}",
+        "of >!{}!< in >!{}!< removes >!{} from {}!<",
         values, step.areas[0].to_string(), values, affected_cells,
       )
     },
     Rule::LockedCandidatesPairs | Rule::LockedCandidatesTriples => {
       format!(
-        "({}) {} in {} removes {} from {}",
+        ">!({})!< >!{} in {}!< removes >!{}!< from >!{}!<",
         values, step.areas[0].to_string(), step.areas[1].to_string(), values, affected_cells,
       )
     },
     Rule::EmptyRectangles => {
       format!(
-        "in {} that sees strong link {}-{} to remove {} from {}",
+        "in >!{}!< that sees strong link >!{}-{}!< to remove >!{}!< from >!{}!<",
         step.areas[0].to_string(), cell_displays[0], cell_displays[1], values, affected_cells
       )
     },
