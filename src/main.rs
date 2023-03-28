@@ -1,5 +1,6 @@
 use std::env;
 use byte_unit::Byte;
+use sudoku_image_parser::CellCandidates;
 use warp::Filter;
 use roux::{submission::SubmissionData};
 use lisudoku_solver::{solver::Solver, types::{SudokuConstraints, FixedNumber, SolutionType}};
@@ -15,12 +16,15 @@ use crate::discord::notify_about_comment;
 
 const LISUDOKU_BASE_URL: &str = "https://lisudoku.xyz";
 
-fn compute_comment_text(given_digits: Vec<FixedNumber>) -> Result<String, Box<dyn std::error::Error>> {
+fn compute_comment_text(
+  given_digits: Vec<FixedNumber>, candidates: Vec<CellCandidates>
+) -> Result<String, Box<dyn std::error::Error>> {
   let constraints = SudokuConstraints::new(9, given_digits);
   let import_data = constraints.to_lz_string();
   let full_solve_url = format!("{}/solver?import={}", LISUDOKU_BASE_URL, import_data);
 
   println!("Grid:\n{}", constraints.to_grid_string());
+  println!("Candidates:\n{:?}", candidates);
 
   let mut solver = Solver::new(constraints, None).with_hint_mode();
   let solution = solver.logical_solve();
@@ -32,10 +36,12 @@ fn compute_comment_text(given_digits: Vec<FixedNumber>) -> Result<String, Box<dy
     return Err(Box::from("No grid step found :("))
   }
 
-  let mut text = steps::compute_steps_text(solution.steps);
+  let mut text = steps::compute_steps_text(solution.steps, candidates);
   text += &format!("Puzzle import string: `{}`  \n\n", solver.constraints.to_import_string());
   text += &format!("^Full ^solve ^[here]({}).  \n", full_solve_url);
-  text += &format!("^I ^am ^a ^bot. ^Reply ^to ^this ^comment ^if ^there ^are ^any ^issues.\n");
+  text += &format!("^I ^am ^a ^bot. ^I ^could ^have ^missed ^already ^completed ^steps. \
+    ^Downvoting ^doesn't ^help, ^explain ^what's ^wrong ^so ^I ^can ^improve.\n"
+  );
 
   Ok(String::from(text))
 }
@@ -51,11 +57,13 @@ async fn process_post(post: &SubmissionData) -> Result<(), Box<dyn std::error::E
   }
 
   println!("Parsing image");
-  let given_digits = parse_image_from_bytes(&image_data)?;
+  let (given_digits, candidates) = parse_image_from_bytes(&image_data)?;
 
   println!("Composing message");
 
-  let comment_text = compute_comment_text(given_digits)?;
+  let comment_text = compute_comment_text(given_digits, candidates)?;
+
+  // println!("{}", &comment_text);
 
   post_reply(post, comment_text).await?;
 
@@ -83,9 +91,12 @@ async fn run_job() -> Result<(), Box<dyn std::error::Error>> {
 async fn run_image(image_path: &str) -> Result<(), Box<dyn std::error::Error>> {
   println!("Parsing image at {}", image_path);
 
-  let given_digits = parse_image_at_path(image_path)?;
+  let (given_digits, candidates) = parse_image_at_path(image_path)?;
   let constraints = SudokuConstraints::new(9, given_digits);
   println!("Grid:\n{}", constraints.to_grid_string());
+  println!("Candidates:\n{}", candidates.iter().map(|cell_candidates| {
+    format!("({},{}) => {:?}", cell_candidates.cell.row, cell_candidates.cell.col, cell_candidates.values)
+  }).collect::<Vec<String>>().join(", "));
 
   Ok(())
 }

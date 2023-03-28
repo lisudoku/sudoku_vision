@@ -8,11 +8,17 @@ use tesseract_plumbing::tesseract_sys::TessPageSegMode_PSM_SINGLE_CHAR;
 pub struct Tesseract(TessBaseApi);
 
 impl Tesseract {
-  pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+  pub fn new(mut char_whitelist: &str) -> Result<Self, Box<dyn std::error::Error>> {
     let mut tess = Tesseract(TessBaseApi::create());
+
     // Training data (languages) must be in folder /usr/local/share/tessdata/
     tess = tess.init("digits")?;
-    tess = tess.set_variable("tessedit_char_whitelist", "123456789")?;
+
+    if char_whitelist.is_empty() {
+      char_whitelist = "123456789";
+    }
+    tess = tess.set_variable("tessedit_char_whitelist", char_whitelist)?;
+
     tess = tess.set_page_seg_mode(TessPageSegMode_PSM_RAW_LINE)?;
     // Raw mode seems to work better than single char mode
     // tess = tess.set_page_seg_mode(TessPageSegMode_PSM_SINGLE_CHAR)?;

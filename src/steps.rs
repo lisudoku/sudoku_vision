@@ -1,15 +1,15 @@
-use lisudoku_solver::types::{SolutionStep, Rule};
+use std::collections::HashSet;
+use lisudoku_solver::types::{SolutionStep, Rule, CellPosition};
+use crate::sudoku_image_parser::CellCandidates;
 
-pub fn compute_steps_text(steps: Vec<SolutionStep>) -> String {
-  let relevant_steps: Vec<&SolutionStep> = steps.iter().filter(|step| step.rule != Rule::Candidates).collect();
+pub fn compute_steps_text(steps: Vec<SolutionStep>, candidates: Vec<CellCandidates>) -> String {
+  let relevant_steps: Vec<SolutionStep> = filter_relevant_steps(steps, candidates);
   if relevant_steps.len() == 1 {
-    return format!("There is a {}  \n\n", step_description(relevant_steps[0]))
+    return format!("There is a {}  \n\n", step_description(&relevant_steps[0]))
   }
 
   let mut text = String::default();
-  text += "Steps to make progress ";
-  text += "^\\(I ^ignored ^any ^existing ^pencilmarks, ^the ^helpful ^steps ^are ^likely ^at ^the ^end ^of ^the ^list)  \n";
-  text += "* Make sure to write in full [pencilmarks](https://www.sudopedia.org/wiki/Pencilmark)  \n";
+  text += "Steps to make progress  \n";
   for (index, step) in relevant_steps.iter().enumerate() {
     text += "* ";
     if index == relevant_steps.len() - 1 {
@@ -19,6 +19,56 @@ pub fn compute_steps_text(steps: Vec<SolutionStep>) -> String {
   }
   text += "\n";
   text
+}
+
+fn filter_relevant_steps(steps: Vec<SolutionStep>, candidates_list: Vec<CellCandidates>) -> Vec<SolutionStep> {
+  let mut candidates = vec![ vec![ HashSet::new(); 9 ]; 9 ];
+  for CellCandidates { cell, values } in candidates_list {
+    candidates[cell.row][cell.col] = values.iter().cloned().collect();
+  }
+  steps.into_iter().filter(|step| !is_redundand_step(step, &candidates)).collect()
+}
+
+fn is_redundand_step(step: &SolutionStep, candidates: &Vec<Vec<HashSet<u32>>>) -> bool {
+  match step.rule {
+    Rule::Candidates => true,
+    Rule::HiddenSingle | Rule::NakedSingle | Rule::Thermo => false,
+    Rule::HiddenPairs | Rule::HiddenTriples => {
+      cells_only_contain_candidates(&step.cells, &step.values, candidates)
+    },
+    Rule::XYWing => {
+      let z_value = step.values[2];
+      cells_do_not_contain_candidates(&step.affected_cells, &vec![ z_value ], candidates)
+    },
+    Rule::CommonPeerEliminationKropki => {
+      cells_do_not_contain_set(&step.affected_cells, &step.values, candidates)
+    },
+    Rule::XWing | Rule::ThermoCandidates | Rule::KillerCandidates |
+      Rule::Killer45 | Rule::Kropki | Rule::KropkiChainCandidates | Rule::TopBottomCandidates | 
+      Rule::CommonPeerElimination | Rule::Swordfish | Rule::TurbotFish |
+      Rule::NakedPairs | Rule::NakedTriples |
+      Rule::LockedCandidatesPairs | Rule::LockedCandidatesTriples | Rule::EmptyRectangles => {
+        cells_do_not_contain_candidates(&step.affected_cells, &step.values, candidates)
+    },
+  }
+}
+
+fn cells_only_contain_candidates(cells: &Vec<CellPosition>, values: &Vec<u32>, candidates: &Vec<Vec<HashSet<u32>>>) -> bool {
+  cells.iter().all(|&CellPosition { row, col }| {
+    !candidates[row][col].is_empty() && candidates[row][col].difference(&values.iter().cloned().collect()).cloned().collect::<HashSet<u32>>().is_empty()
+  })
+}
+
+fn cells_do_not_contain_candidates(cells: &Vec<CellPosition>, values: &Vec<u32>, candidates: &Vec<Vec<HashSet<u32>>>) -> bool {
+  cells.iter().all(|&CellPosition { row, col }| {
+    !candidates[row][col].is_empty() && candidates[row][col].intersection(&values.iter().cloned().collect()).cloned().collect::<HashSet<u32>>().is_empty()
+  })
+}
+
+fn cells_do_not_contain_set(cells: &Vec<CellPosition>, values: &Vec<u32>, candidates: &Vec<Vec<HashSet<u32>>>) -> bool {
+  cells.iter().enumerate().all(|(index, &CellPosition { row, col })| {
+    !candidates[row][col].is_empty() && !candidates[row][col].contains(&values[index])
+  })
 }
 
 fn step_description(step: &SolutionStep) -> String {
