@@ -1,6 +1,7 @@
 use std::thread;
 use core::time::Duration;
 use std::{env, collections::HashSet};
+use chrono::{Utc, TimeZone};
 use roux::{Reddit, Subreddit, User, response::BasicThing, submission::SubmissionData, util::FeedOption};
 use warp::hyper::body::Bytes;
 
@@ -43,21 +44,29 @@ pub async fn fetch_relevant_posts() -> Vec<BasicThing<SubmissionData>> {
   let relevant_posts: Vec<BasicThing<SubmissionData>> = posts
   .into_iter()
   .filter(|post| {
-      if post.data.url.is_none() {
-        return false
-      }
+    let created_at = Utc.timestamp_opt(post.data.created_utc as i64, 0).unwrap();
+    let duration = Utc::now().signed_duration_since(created_at);
 
-      let url = post.data.url.as_ref().unwrap();
-      let post_flair = env::var("POST_FLAIR").unwrap_or(POST_FLAIR_DEFAULT.to_string());
+    // Do not consider posts posted under an hour ago
+    if duration.num_hours() < 1 {
+      return false
+    }
 
-      (
-        url.starts_with("https://i.redd.it/") ||
-        url.starts_with("https://i.imgur.com/") ||
-        url.starts_with("https://imgur.com/")
-      ) &&
+    if post.data.url.is_none() {
+      return false
+    }
+
+    let url = post.data.url.as_ref().unwrap();
+    let post_flair = env::var("POST_FLAIR").unwrap_or(POST_FLAIR_DEFAULT.to_string());
+
+    (
+      url.starts_with("https://i.redd.it/") ||
+      url.starts_with("https://i.imgur.com/") ||
+      url.starts_with("https://imgur.com/")
+    ) &&
       post.data.link_flair_text == Some(post_flair) &&
       !replied_post_ids.contains(&post.data.name)
-    }).collect();
+  }).collect();
 
   println!("After filtering there are {} posts remaining", relevant_posts.len());
 
