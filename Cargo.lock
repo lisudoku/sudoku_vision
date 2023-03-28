@@ -1003,11 +1003,12 @@ dependencies = [
 
 [[package]]
 name = "medians"
-version = "2.1.7"
+version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccc87881c92ba95dca8e992c12fbb0e010438921021d37d2c676472b332c239d"
+checksum = "c4ea26c7b102fc9e67ab647c5198e31e4f875682458f8a2499e59e4dc41b886d"
 dependencies = [
  "indxvec",
+ "ran",
 ]
 
 [[package]]
@@ -1381,6 +1382,12 @@ checksum = "8856d8364d252a14d474036ea1358d63c9e6965c8e5c1885c18f73d70bff9c7b"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "ran"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1c864d18bbec491e67fb137c333622ed897ab9211c75dc6f23f4c0dff1ba907a"
 
 [[package]]
 name = "rand"

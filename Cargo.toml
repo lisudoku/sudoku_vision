@@ -13,7 +13,7 @@ opencv = "0.77.0"
 reqwest = "0.11.14"
 lisudoku-solver = "0.1.19"
 # lisudoku-solver = { path = "../lisudoku_solver" }
-medians = "2.1.7"
+medians = "2.2.1"
 tesseract-sys = "0.5.15"
 tesseract-plumbing = "0.9.0"
 byte-unit = "4.0.18"

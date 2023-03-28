@@ -85,7 +85,7 @@ fn detect_horizontal_lines(lines: &Vec<Line>, image_width: i32, filter_by_size: 
   println!("Horizontal count (distance filter) = {}", horizontal.len());
 
   let line_widths: Vec<i32> = horizontal.iter().map(|line| (line.0 - line.2).abs()).collect();
-  let median_width = Medianf64::medianf64(
+  let median_width = Medianf64::median(
     line_widths.iter().map(|x| *x as f64).collect::<Vec<f64>>().as_slice()
   )?;
 
@@ -134,7 +134,7 @@ fn detect_vertical_lines(lines: &Vec<Line>, filter_by_size: bool) -> Result<Vec<
 
   let line_heights: Vec<i32> = vertical.iter().map(|line| (line.1 - line.3).abs()).collect();
 
-  let median_height = Medianf64::medianf64(
+  let median_height = Medianf64::median(
     line_heights.iter().map(|x| *x as f64).collect::<Vec<f64>>().as_slice()
   )?;
 
