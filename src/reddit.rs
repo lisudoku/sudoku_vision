@@ -58,6 +58,7 @@ fn compute_comment_text(ocr_result: OcrResult) -> Result<String, Box<dyn std::er
   let mut text = String::new();
   text += &format!("You can solve this puzzle here: [lisudoku]({})  \n\n", lisudoku_play_url);
   text += &format!("Puzzle import string: `{}`  \n\n", constraints.to_import_string());
+  text += &format!("^I ^am ^a ^bot. ^Reply ^if ^I ^made ^a ^mistake.\n");
 
   Ok(String::from(text))
 }
