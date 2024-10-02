@@ -1,9 +1,9 @@
-# OpenCV dependencies
-ARG BUILD_PACKAGES="wget clang libssl-dev libclang-dev libopencv-dev libleptonica-dev libtesseract-dev"
+# OpenCV and other dependencies
+ARG BUILD_PACKAGES="clang libclang-dev libopencv-dev libleptonica-dev libtesseract-dev"
 
-FROM rust:1.80-slim-bookworm as builder
+FROM rust:1.80-bookworm as builder
 
-# Install OpenCV dependencies
+# Install dependencies
 ARG BUILD_PACKAGES
 RUN apt-get update -qq && \
     apt-get install -y ${BUILD_PACKAGES}
@@ -30,9 +30,9 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 RUN wget https://github.com/Shreeshrii/tessdata_shreetest/raw/master/digits.traineddata
 
 # Runtime image
-FROM debian:bookworm-slim
+FROM debian:bookworm
 
-# Install OpenCV dependencies
+# Install dependencies
 ARG BUILD_PACKAGES
 RUN apt-get update -qq && \
     apt-get install -y ${BUILD_PACKAGES}
