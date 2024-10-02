@@ -1,8 +1,12 @@
-# reddit_sudoku_solver
+# sudoku_vision
 
-This is a [reddit bot](https://www.reddit.com/user/sudoku-solver-bot/) that gives hints for submissions on [r/sudoku](https://www.reddit.com/r/sudoku).
+This is a server that exposes an API for sudoku OCR.
 
-It uses OpenCV to detect lines and to split up the puzzle into squares and then Tesseract to detect digits.
+It uses [lisudoku_ocr](https://github.com/lisudoku/lisudoku_ocr) for digit detection.
+
+See it in action on the [lisudoku solver](http://lisudoku.xyz/solver) page.
+
+<!-- This is a [reddit bot](https://www.reddit.com/user/sudoku-solver-bot/) that gives hints for submissions on [r/sudoku](https://www.reddit.com/r/sudoku).
 
 ENV variables
 * `JOB_INTERVAL` = how often to run the checker
@@ -11,18 +15,11 @@ ENV variables
 * `POST_COUNT` = how many of the latest subreddit posts to check every time
 * `BOT_COMMENT_HISTORY_LIMIT` = number of bot comments to check in order to avoid duplicate comments
 * `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_PASSWORD` = reddit auth
-
-## Running on a local image
-
-`IMAGE_PATH=src/test_images/image9.png cargo run`
+-->
 
 ## Contribute
 
 Join the [discord server](https://discord.gg/SGV8TQVSeT).
-
-## Running tests
-
-`RUST_TEST_THREADS=1 cargo test`
 
 ## Deployment
 

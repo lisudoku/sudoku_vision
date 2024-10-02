@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 use lisudoku_solver::types::{SolutionStep, Rule, CellPosition};
-use crate::sudoku_image_parser::CellCandidates;
+use lisudoku_ocr::CellCandidates;
 
+#[allow(unused)]
 pub fn compute_steps_text(steps: Vec<SolutionStep>, candidates: Vec<CellCandidates>) -> String {
   let relevant_steps: Vec<SolutionStep> = filter_relevant_steps(steps, candidates);
   if relevant_steps.len() == 1 {

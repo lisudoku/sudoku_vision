@@ -1,7 +1,7 @@
 # OpenCV dependencies
-ARG BUILD_PACKAGES="wget clang libclang-dev libopencv-dev libleptonica-dev libtesseract-dev"
+ARG BUILD_PACKAGES="wget clang libssl-dev libclang-dev libopencv-dev libleptonica-dev libtesseract-dev"
 
-FROM rust:latest as builder
+FROM rust:1.80-slim-bookworm as builder
 
 # Install OpenCV dependencies
 ARG BUILD_PACKAGES
@@ -30,7 +30,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 RUN wget https://github.com/Shreeshrii/tessdata_shreetest/raw/master/digits.traineddata
 
 # Runtime image
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 # Install OpenCV dependencies
 ARG BUILD_PACKAGES
@@ -44,9 +44,9 @@ USER app
 WORKDIR /app
 
 # Get compiled binaries from builder's cargo install directory
-COPY --from=builder /usr/local/cargo/bin/reddit_sudoku_solver /app/reddit_sudoku_solver
+COPY --from=builder /usr/local/cargo/bin/sudoku_vision /app/sudoku_vision
 
 # Copy tesseract digits training data
-COPY --from=builder /usr/src/app/digits.traineddata /usr/share/tesseract-ocr/4.00/tessdata/digits.traineddata
+COPY --from=builder /usr/src/app/digits.traineddata /usr/share/tesseract-ocr/5/tessdata/digits.traineddata
 
 # No CMD or ENTRYPOINT, see fly.toml with `cmd` override.

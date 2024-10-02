@@ -1,115 +1,23 @@
 use std::env;
-use byte_unit::Byte;
-use sudoku_image_parser::CellCandidates;
+use job::run_scheduler;
+use lisudoku_ocr::{parse_image_at_url, parse_image_from_bytes, OcrResult};
+use serde_json::json;
 use warp::Filter;
-use roux::{submission::SubmissionData};
-use lisudoku_solver::{solver::Solver, types::{SudokuConstraints, FixedNumber, SolutionType}};
+use lisudoku_solver::types::SudokuConstraints;
+use bytes::Bytes;
+use warp::http::StatusCode;
+use futures::StreamExt;
+use warp::Buf;
 
-mod sudoku_image_parser;
 mod steps;
 mod reddit;
 mod discord;
-
-use crate::sudoku_image_parser::{parse_image_from_bytes, parse_image_at_path};
-use crate::reddit::{post_reply, fetch_relevant_posts, get_post_image_data};
-use crate::discord::notify_about_comment;
-
-const LISUDOKU_BASE_URL: &str = "https://lisudoku.xyz";
-
-fn compute_comment_text(
-  given_digits: Vec<FixedNumber>, candidates: Vec<CellCandidates>
-) -> Result<String, Box<dyn std::error::Error>> {
-  let constraints = SudokuConstraints::new(9, given_digits);
-  let import_data = constraints.to_lz_string();
-  let full_solve_url = format!("{}/solver?import={}", LISUDOKU_BASE_URL, import_data);
-
-  println!("Grid:\n{}", constraints.to_grid_string());
-  println!("Candidates:\n{:?}", candidates);
-
-  let mut solver = Solver::new(constraints, None).with_hint_mode();
-  let solution = solver.logical_solve();
-
-  if solution.solution_type == SolutionType::None {
-    return Err(Box::from("No solution found :("))
-  }
-  if !solution.steps.iter().any(|step| step.is_grid_step()) {
-    return Err(Box::from("No grid step found :("))
-  }
-
-  let mut text = steps::compute_steps_text(solution.steps, candidates);
-  text += &format!("Puzzle import string: `{}`  \n\n", solver.constraints.to_import_string());
-  text += &format!("^Full ^solve ^[here]({}).  \n", full_solve_url);
-  text += &format!("^I ^am ^a ^bot. ^I ^could ^have ^missed ^already ^completed ^steps. \
-    ^Downvoting ^doesn't ^help, ^explain ^what's ^wrong ^so ^I ^can ^improve.\n"
-  );
-
-  Ok(String::from(text))
-}
-
-async fn process_post(post: &SubmissionData) -> Result<(), Box<dyn std::error::Error>> {
-  println!("=============================\nProcessing post {}", post.title);
-
-  let image_data = get_post_image_data(post).await?;
-  println!("Downloaded image ({})", Byte::from_bytes(image_data.len() as u128).get_appropriate_unit(false));
-
-  if image_data.len() > 1_000_000 {
-    return Err(Box::from("Image too large, skipping"))
-  }
-
-  println!("Parsing image");
-  let (given_digits, candidates) = parse_image_from_bytes(&image_data)?;
-
-  println!("Composing message");
-
-  let comment_text = compute_comment_text(given_digits, candidates)?;
-
-  // println!("{}", &comment_text);
-
-  post_reply(post, comment_text).await?;
-
-  notify_about_comment(&post)?;
-
-  Ok(())
-}
-
-async fn run_job() -> Result<(), Box<dyn std::error::Error>> {
-  println!("Starting Job");
-
-  let relevant_posts = fetch_relevant_posts().await;
-
-  println!("Processing {} posts", relevant_posts.len());
-  for post in relevant_posts {
-    let res = process_post(&post.data).await;
-    if let Err(e) = res {
-      println!("Error for post {}: {}", post.data.title, e);
-    }
-  }
-
-  Ok(())
-}
-
-async fn run_image(image_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-  println!("Parsing image at {}", image_path);
-
-  let (given_digits, candidates) = parse_image_at_path(image_path)?;
-  let constraints = SudokuConstraints::new(9, given_digits);
-  println!("Grid:\n{}", constraints.to_grid_string());
-  println!("Candidates:\n{}", candidates.iter().map(|cell_candidates| {
-    format!("({},{}) => {:?}", cell_candidates.cell.row, cell_candidates.cell.col, cell_candidates.values)
-  }).collect::<Vec<String>>().join(", "));
-
-  Ok(())
-}
+mod job;
 
 #[tokio::main]
 async fn main() {
-  if let Ok(image_path) = env::var("IMAGE_PATH") {
-    run_image(&image_path).await.unwrap();
-    return
-  }
-
   if env::var("RUN_JOB").is_ok() {
-    run_job().await.unwrap();
+    job::run_job().await.unwrap();
     return
   }
 
@@ -121,27 +29,112 @@ async fn main() {
 
   tokio::spawn({
     async move {
-      loop {
-        println!(">>>>>>>>>> Running job");
-        let output = std::process::Command::new("sh")
-          .arg("-c")
-          .arg("RUN_JOB=1 ./reddit_sudoku_solver")
-          .output()
-          .unwrap();
-        println!("Command stdout:\n{}", String::from_utf8_lossy(&output.stdout));
-        if !output.stderr.is_empty() {
-          println!("Command stderr:\n{}", String::from_utf8_lossy(&output.stderr));
-        }
-        tokio::time::sleep(std::time::Duration::from_secs(job_interval)).await;
-      }
+      run_scheduler(job_interval).await
     }
   });
 
   println!("Starting server");
 
-  // Set up a server (necessary for health checks)
-  let routes = warp::any().map(|| "OK");
+  let cors = warp::cors()
+    .allow_origin("http://localhost:5173")
+    .allow_methods(vec!["POST"]);
+
+  let ocr_route = warp::post()
+    .and(warp::path("parse_sudoku_image"))
+    .and(warp::multipart::form())
+    .and_then(ocr_route_handler)
+    .with(cors);
+  let routes = ocr_route;
   warp::serve(routes)
       .run(([0, 0, 0, 0, 0, 0, 0, 0], 8080))
       .await;
+}
+
+struct ParseParams {
+  file_content: Option<Bytes>,
+  file_url: Option<String>,
+  only_given_digits: bool,
+}
+
+fn handle_error(message: &str) -> Box<dyn warp::Reply> {
+  let error_response = serde_json::json!({
+    "error": message,
+  });
+  Box::new(warp::reply::with_status(
+    warp::reply::json(&error_response),
+    StatusCode::BAD_REQUEST,
+  ))
+}
+
+async fn ocr_route_handler(form: warp::multipart::FormData) -> Result<Box<dyn warp::Reply>, warp::Rejection> {
+  let params = match parse_params(form).await {
+    Ok(p) => p,
+    Err(_) => {
+      return Ok(handle_error("Provide file_content or file_url"))
+    },
+  };
+
+  let ocr_result = match parse_image(params).await {
+    Ok(res) => res,
+    Err(e) => {
+      return Ok(handle_error(&e.to_string()))
+    }
+  };
+
+  let response = json!({
+    "grid": SudokuConstraints::new(9, ocr_result.given_digits).to_import_string(),
+    "candidates": ocr_result.candidates,
+  });
+  Ok(Box::new(warp::reply::json(&response)))
+}
+
+async fn parse_params(form: warp::multipart::FormData) -> Result<ParseParams, String> {
+  let mut file_content: Option<Bytes> = None;
+  let mut file_url: Option<String> = None;
+  let mut only_given_digits = false;
+
+  let mut parts = form;
+  while let Some(part) = parts.next().await {
+    let mut part = part.unwrap();
+    if part.name() == "file_url" {
+      let data = part.data().await;
+      if let Some(data) = data {
+        file_url = Some(String::from_utf8_lossy(data.unwrap().chunk()).to_string());
+      }
+    } else if part.name() == "file_content" {
+      let mut file_contents = Vec::new();
+      while let Some(chunk) = part.data().await {
+        match chunk {
+          Ok(data) => file_contents.extend_from_slice(&data.chunk()),
+          Err(_) => panic!("Something went wrong"),
+        }
+      }
+      file_content = Some(Bytes::from(file_contents));
+    } else if part.name() == "only_given_digits" {
+      let data = part.data().await;
+      if let Some(data) = data {
+        only_given_digits = String::from_utf8_lossy(data.unwrap().chunk()).to_string() == "true";
+      }
+    }
+  }
+
+  if file_content == None && file_url == None {
+    return Err("Provide file_content or file_url".to_string())
+  }
+
+  Ok(ParseParams{
+    file_content,
+    file_url,
+    only_given_digits,
+  })
+}
+
+async fn parse_image(params: ParseParams) -> Result<OcrResult, Box<dyn std::error::Error>> {
+  if let Some(file_url) = params.file_url {
+    return Ok(parse_image_at_url(&file_url, params.only_given_digits).await?)
+  }
+  if let Some(file_content) = params.file_content {
+    return Ok(parse_image_from_bytes(&file_content, params.only_given_digits)?)
+  }
+  panic!("No params available");
 }
