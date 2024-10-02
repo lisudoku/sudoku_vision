@@ -18,5 +18,7 @@ pub fn notify_about_mention(mention: &InboxData) -> Result<(), Box<dyn std::erro
 
   discord.send_message(bot_channel.id, &text, "", false)?;
 
+  println!("Sent message to discord");
+
   Ok(())
 }
