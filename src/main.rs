@@ -1,6 +1,7 @@
 use std::env;
 use job::run_scheduler;
 use lisudoku_ocr::{parse_image_at_url, parse_image_from_bytes, OcrResult};
+use reqwest::Url;
 use serde_json::json;
 use warp::Filter;
 use lisudoku_solver::types::SudokuConstraints;
@@ -69,8 +70,8 @@ fn handle_error(message: &str) -> Box<dyn warp::Reply> {
 async fn ocr_route_handler(form: warp::multipart::FormData) -> Result<Box<dyn warp::Reply>, warp::Rejection> {
   let params = match parse_params(form).await {
     Ok(p) => p,
-    Err(_) => {
-      return Ok(handle_error("Provide file_content or file_url"))
+    Err(message) => {
+      return Ok(handle_error(&message))
     },
   };
 
@@ -101,6 +102,9 @@ async fn parse_params(form: warp::multipart::FormData) -> Result<ParseParams, St
       if let Some(data) = data {
         let str = String::from_utf8_lossy(data.unwrap().chunk()).to_string();
         if !str.is_empty() {
+          if Url::parse(&str).is_err() {
+            return Err("file_url is not a URL".to_string())
+          }
           file_url = Some(str);
         }
       }
