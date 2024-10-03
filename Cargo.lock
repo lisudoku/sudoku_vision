@@ -1024,9 +1024,9 @@ checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
 
 [[package]]
 name = "lisudoku-ocr"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea88c8eb7a5fd953d6f2b20eba82182b027c77d4ee1b56dd4ed67414df29f41b"
+checksum = "43dfd35b2ef1783892e9c1cbd87f24b9696367bd615404e3a6b1c1c46124ac25"
 dependencies = [
  "byte-unit",
  "itertools 0.10.5",
