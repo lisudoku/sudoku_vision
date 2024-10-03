@@ -99,7 +99,10 @@ async fn parse_params(form: warp::multipart::FormData) -> Result<ParseParams, St
     if part.name() == "file_url" {
       let data = part.data().await;
       if let Some(data) = data {
-        file_url = Some(String::from_utf8_lossy(data.unwrap().chunk()).to_string());
+        let str = String::from_utf8_lossy(data.unwrap().chunk()).to_string();
+        if !str.is_empty() {
+          file_url = Some(str);
+        }
       }
     } else if part.name() == "file_content" {
       let mut file_contents = Vec::new();
@@ -109,7 +112,9 @@ async fn parse_params(form: warp::multipart::FormData) -> Result<ParseParams, St
           Err(_) => panic!("Something went wrong"),
         }
       }
-      file_content = Some(Bytes::from(file_contents));
+      if !file_contents.is_empty() {
+        file_content = Some(Bytes::from(file_contents));
+      }
     } else if part.name() == "only_given_digits" {
       let data = part.data().await;
       if let Some(data) = data {
