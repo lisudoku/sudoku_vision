@@ -36,17 +36,23 @@ async fn main() {
 
   println!("Starting server");
 
+  let root_route = warp::get()
+    .map(|| {
+      warp::reply::json(&"Lisudoku vision is online")
+    });
+
+  let ocr_route = warp::post()
+    .and(warp::path("parse_sudoku_image"))
+    .and(warp::multipart::form())
+    .and_then(ocr_route_handler);
+
   let cors = warp::cors()
     .allow_origin("http://localhost:5173")
     .allow_origin("https://lisudoku.xyz")
     .allow_methods(vec!["GET", "POST"]);
 
-  let ocr_route = warp::post()
-    .and(warp::path("parse_sudoku_image"))
-    .and(warp::multipart::form())
-    .and_then(ocr_route_handler)
-    .with(cors);
-  let routes = ocr_route;
+  let routes = ocr_route.or(root_route).with(cors);
+
   warp::serve(routes)
       .run(([0, 0, 0, 0, 0, 0, 0, 0], 8080))
       .await;
