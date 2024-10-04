@@ -38,7 +38,8 @@ async fn main() {
 
   let cors = warp::cors()
     .allow_origin("http://localhost:5173")
-    .allow_methods(vec!["POST"]);
+    .allow_origin("https://lisudoku.xyz")
+    .allow_methods(vec!["GET", "POST"]);
 
   let ocr_route = warp::post()
     .and(warp::path("parse_sudoku_image"))
