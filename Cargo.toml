@@ -13,7 +13,7 @@ reqwest = "0.11.14"
 byte-unit = "4.0.18"
 discord = { git = "https://github.com/SpaceManiac/discord-rs", rev = "500c344c2d5679a3c08514f01b96fac59eb276df" }
 chrono = "0.4.24"
-lisudoku-ocr = "=0.1.5"
+lisudoku-ocr = "=0.1.6"
 # lisudoku-ocr = { path = "../lisudoku_ocr" }
 lisudoku-solver = "=0.1.19"
 # lisudoku-solver = { path = "../lisudoku_solver" }

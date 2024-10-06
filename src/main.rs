@@ -1,6 +1,7 @@
 use std::env;
+use discord::notify_about_vision_request;
 use job::run_scheduler;
-use lisudoku_ocr::{parse_image_at_url, parse_image_from_bytes, OcrResult};
+use lisudoku_ocr::{get_external_image_data, parse_image_at_url, parse_image_from_bytes, OcrResult, ParseImageError};
 use reqwest::Url;
 use serde_json::json;
 use warp::Filter;
@@ -54,10 +55,11 @@ async fn main() {
   let routes = ocr_route.or(root_route).with(cors);
 
   warp::serve(routes)
-      .run(([0, 0, 0, 0, 0, 0, 0, 0], 8080))
-      .await;
+    .run(([0, 0, 0, 0, 0, 0, 0, 0], 8080))
+    .await;
 }
 
+#[derive(Clone)]
 struct ParseParams {
   file_content: Option<Bytes>,
   file_url: Option<String>,
@@ -82,7 +84,14 @@ async fn ocr_route_handler(form: warp::multipart::FormData) -> Result<Box<dyn wa
     },
   };
 
-  let ocr_result = match parse_image(params).await {
+  let ocr_result_result = parse_image(params.clone()).await;
+
+  let image_data = get_image_bytes(params.clone()).await.ok();
+  if let Err(e) = notify_about_vision_request(image_data, &ocr_result_result).await {
+    eprintln!("Error in discord notification: {}", e);
+  }
+
+  let ocr_result = match ocr_result_result {
     Ok(res) => res,
     Err(e) => {
       return Ok(handle_error(&e.to_string()))
@@ -93,6 +102,7 @@ async fn ocr_route_handler(form: warp::multipart::FormData) -> Result<Box<dyn wa
     "grid": SudokuConstraints::new(9, ocr_result.given_digits).to_import_string(),
     "candidates": ocr_result.candidates,
   });
+
   Ok(Box::new(warp::reply::json(&response)))
 }
 
@@ -145,12 +155,22 @@ async fn parse_params(form: warp::multipart::FormData) -> Result<ParseParams, St
   })
 }
 
-async fn parse_image(params: ParseParams) -> Result<OcrResult, Box<dyn std::error::Error>> {
+async fn parse_image(params: ParseParams) -> Result<OcrResult, String> {
   if let Some(file_url) = params.file_url {
-    return Ok(parse_image_at_url(&file_url, params.only_given_digits).await?)
+    return parse_image_at_url(&file_url, params.only_given_digits).await.map_err(|e| e.to_string())
   }
   if let Some(file_content) = params.file_content {
-    return Ok(parse_image_from_bytes(&file_content, params.only_given_digits)?)
+    return parse_image_from_bytes(&file_content, params.only_given_digits).map_err(|e| e.to_string())
+  }
+  panic!("No params available");
+}
+
+async fn get_image_bytes(params: ParseParams) -> Result<Bytes, ParseImageError> {
+  if let Some(file_url) = params.file_url {
+    return get_external_image_data(&file_url).await
+  }
+  if let Some(file_content) = params.file_content {
+    return Ok(file_content)
   }
   panic!("No params available");
 }

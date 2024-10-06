@@ -1024,9 +1024,9 @@ checksum = "f051f77a7c8e6957c0696eac88f26b0117e54f52d3fc682ab19397a8812846a4"
 
 [[package]]
 name = "lisudoku-ocr"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43dfd35b2ef1783892e9c1cbd87f24b9696367bd615404e3a6b1c1c46124ac25"
+checksum = "c07a8fcd222a0663f5abf1bd69c02a8bd2d07b3b17fba2706b90b539a8c365d0"
 dependencies = [
  "byte-unit",
  "itertools 0.10.5",
@@ -1039,6 +1039,7 @@ dependencies = [
  "tempfile",
  "tesseract-plumbing",
  "tesseract-sys",
+ "thiserror",
  "tokio",
  "url 2.5.2",
  "warp",
@@ -2099,22 +2100,22 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.38"
+version = "1.0.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a9cd18aa97d5c45c6603caea1da6628790b37f7a34b6ca89522331c5180fed0"
+checksum = "d50af8abc119fb8bb6dbabcfa89656f46f84aa0ac7688088608076ad2b459a84"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.38"
+version = "1.0.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fb327af4685e4d03fa8cbcf1716380da910eeb2bb8be417e7f9fd3fb164f36f"
+checksum = "08904e7672f5eb876eaaf87e0ce17857500934f4981c4a0ab2b4aa98baac7fc3"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.76",
 ]
 
 [[package]]
